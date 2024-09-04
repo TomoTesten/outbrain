@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Outbrain</title>
+        <style>
+            /* Basic Reset */
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                font-family: Arial, sans-serif;
+            }
+            
+            /* Dark Theme Styles */
+            body {
+                background-color: #121212; /* Dark background color */
+                color: #e0e0e0; /* Light text color for contrast */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                text-align: center;
+            }
+
+            button {
+                background-color: #1f1f1f; /* Dark button background */
+                color: #e0e0e0; /* Light button text color */
+                border: 1px solid #333; /* Slightly lighter border for buttons */
+                border-radius: 5px;
+                padding: 10px 20px;
+                margin: 10px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+
+            button:hover {
+                background-color: #333; /* Slightly lighter on hover */
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <button id="Q1">Q1</button>
+            <button id="Q2">Q2</button>
+        </div>
+
+        <script>
+            // Question 1
+            document.getElementById('Q1').addEventListener('click', Q1);
+
+            function Q1() {
+                link = 'https://jsonplaceholder.typicode.com/posts'
+                fetch(link)
+                    .then(response => response.json())
+                    .then(posts => {
+                        const oddTitleToUpper = posts.map(
+                            post => 
+                            {
+                                if (post.id % 2 === 0) {
+                                    post.title = post.title.toUpperCase();
+                                }
+                                return post;
+                            }
+                        );
+                        console.log(oddTitleToUpper);
+                    })
+                    .catch(error => console.error('Error fetching posts:', error));
+            }
+
+            // Question 2
+            document.getElementById('Q2').addEventListener('click', fetchUsersWithPostsAndTodos);
+
+            function fetchUsersWithPostsAndTodos() {
+                // Fetch users
+                fetch('https://jsonplaceholder.typicode.com/users')
+                    .then(response => response.json())
+                    .then(users => {
+                        
+                        const userPromises = users.map(user => {
+                            
+                            const userPosts = fetch(`https://jsonplaceholder.typicode.com/users/${user.id}/posts`)
+                                .then(response => response.json());
+
+                            
+                            const userTodos = fetch(`https://jsonplaceholder.typicode.com/users/${user.id}/todos`)
+                                .then(response => response.json());
+
+                            
+                            return Promise.all([userPosts, userTodos])
+                                .then(([posts, todos]) => {
+                                    return {
+                                        id: user.id,
+                                        username: user.username,
+                                        email: user.email,
+                                        phone: user.phone,
+                                        posts: posts.map(post => ({
+                                            title: post.title,
+                                            body: post.body
+                                        })),
+                                        todos: todos.map(todo => ({
+                                            title: todo.title
+                                        }))
+                                    };
+                                });
+                        });
+
+                        // Wait for all user data to be fetched and processed
+                        Promise.all(userPromises)
+                            .then(usersWithDetails => {
+                                console.log(usersWithDetails);
+                            })
+                            .catch(error => console.error('Error fetching users:', error));
+                    })
+                    .catch(error => console.error('Error fetching users:', error));
+            }
+        </script>
+    </body>
+</html>
